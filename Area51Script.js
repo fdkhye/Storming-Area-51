@@ -45,7 +45,7 @@ var modbgHeight = bgHeight;
 
 var debug = false;
 var debugGrid = false;
-var toggleFogOfWar = true;
+var toggleFogOfWar = false;
 
 var selectedRegion = null;
 var currentPlayerTurn = 0;
@@ -711,6 +711,10 @@ function DefenceAiTurn(aiplayer, inputRegions) {
         console.log(inputRegions[zeroTroopAttack[i].source]);
         if (inputRegions[zeroTroopAttack[i].source].troop['soldier'] !== undefined && inputRegions[zeroTroopAttack[i].source].troop['soldier'].count !== 0) {
             moveFight(inputRegions[zeroTroopAttack[i].source], inputRegions[zeroTroopAttack[i].destination]);
+            console.log("source")
+            console.log(inputRegions[zeroTroopAttack[i].source])
+            console.log("destination")
+            console.log(inputRegions[zeroTroopAttack[i].destination])
         }
 
     }
@@ -760,36 +764,34 @@ function DefenceAiTurn(aiplayer, inputRegions) {
      * End Turn
      */
 
-    //toggleTurn();
+    toggleTurn();
 
-    players[currentPlayerTurn].cameraCoord = { x: cameraOrigin.x, y: cameraOrigin.y }
+    // players[currentPlayerTurn].cameraCoord = { x: cameraOrigin.x, y: cameraOrigin.y }
 
-    for (var i = 0; i < regionsList.length; i++) {
+    // for (var i = 0; i < regionsList.length; i++) {
 
-        if (regionsList[i] != null && regionsList[i].owner == currentPlayerTurn && regionsList[i].bldg["farm"] != null) {
-            players[currentPlayerTurn].foodCount += 1;
+    //     if (regionsList[i] != null && regionsList[i].owner == currentPlayerTurn && regionsList[i].bldg["farm"] != null) {
+    //         players[currentPlayerTurn].foodCount += 1;
 
-        }
+    //     }
 
-        if (regionsList[i] != null && regionsList[i].troop["soldier"] != null) {
-            regionsList[i].troop["soldier"].hasMoved = 0;
-        }
+    //     if (regionsList[i] != null && regionsList[i].troop["soldier"] != null) {
+    //         regionsList[i].troop["soldier"].hasMoved = 0;
+    //     }
 
-        if (regionsList[i] != null && regionsList[i].cap != null) {
-            regionsList[i].cap.hasMoved = false;
+    //     if (regionsList[i] != null && regionsList[i].cap != null) {
+    //         regionsList[i].cap.hasMoved = false;
 
-        }
-
-
-    }
-
-    currentPlayerTurn = turnCount % 2;
-    turnCount++;
-
-    changeCameraOrigin(players[currentPlayerTurn].cameraCoord.x, players[currentPlayerTurn].cameraCoord.y);
-    createArray(cameraOrigin);
+    //     }
 
 
+    // }
+
+    // currentPlayerTurn = turnCount % 2;
+    // turnCount++;
+
+    // changeCameraOrigin(players[currentPlayerTurn].cameraCoord.x, players[currentPlayerTurn].cameraCoord.y);
+    // createArray(cameraOrigin);
 
 }
 
@@ -804,95 +806,172 @@ function DefenceAiTurn(aiplayer, inputRegions) {
 // ===================================================================
 // Start - Menu Functions
 // ===================================================================
+function moveToFriendly(src, dest) {
+
+}
+
 function moveFight(source, destination) {
-    // selectedRegion = null;
-    // console.log(source)
-    // console.log(destination)
     var validMove = source.neighbors.includes(destination.id);
     var validSource = source.troop['soldier'] !== null;
-    // console.log("HERRO")
-    // console.log(destination)
-    // console.log("Hello " + destination.troop === [])
 
 
     if ((destination.owner === -1 || destination.owner === source.owner || destination.troop === []) && validMove && validSource) {
         destination.owner = source.owner;
 
-        if (destination.troop['soldier'] != null && source.troop['soldier'].count != 0) {
+        // Move to empty region
+        if ((destination.troop['soldier'] == null && destination.troop['soldierRanged'] == null) &&
+            ((source.troop['soldier'] != null && source.troop['soldier'].hasMoved < source.troop['soldier'].count)
+                || (source.troop['soldierRanged'] != null && source.troop['soldierRanged'].hasMoved < source.troop['soldierRanged'].count))) {
 
-            // Move all troops from allied region to region with troops
-            if (source.troop['soldier'].hasMoved == 0) {
-                destination.troop['soldier'].count += source.troop['soldier'].count;
-                destination.troop['soldier'].hasMoved += source.troop['soldier'].count;
-                source.troop['soldier'].removeFromWorld = true;
-                source.troop['soldier'] = null;
-            }
-            // Move only the troops that hasn't moved from allied region to region with troops
-            else {
-                destination.troop['soldier'].count += source.troop['soldier'].count - source.troop['soldier'].hasMoved;
-                destination.troop['soldier'].hasMoved += source.troop['soldier'].count - source.troop['soldier'].hasMoved;
-                source.troop['soldier'].count = source.troop['soldier'].hasMoved;
-            }
-
-            // Move all troops from allied region to region with troops
-            if (source.troop['soldierRanged'].hasMoved == 0) {
-                destination.troop['soldierRanged'].count += source.troop['soldierRanged'].count;
-                destination.troop['soldierRanged'].hasMoved += source.troop['soldierRanged'].count;
-                source.troop['soldierRanged'].removeFromWorld = true;
-                source.troop['soldierRanged'] = null;
-            }
-            // Move only the troops that hasn't moved from allied region to region with troops
-            else {
-                destination.troop['soldierRanged'].count += source.troop['soldierRanged'].count - source.troop['soldierRanged'].hasMoved;
-                destination.troop['soldierRanged'].hasMoved += source.troop['soldierRanged'].count - source.troop['soldierRanged'].hasMoved;
-                source.troop['soldierRanged'].count = source.troop['soldierRanged'].hasMoved;
-            }
-
-        } else if (source.troop['soldier'].count != 0 ) {
-            // Move all troops from allied region to region with no troops
-            if (source.troop['soldier'].hasMoved == 0 && source.troop['soldierRanged'].hasMoved == 0) {
-                destination.troop = source.troop;
-                destination.troop['soldier'].hasMoved = source.troop['soldier'].count;
-                destination.troop['soldierRanged'].hasMoved = source.troop['soldierRanged'].count;
-                destination.troop['soldier'].x = destination.troopXY[0];
-                destination.troop['soldier'].y = destination.troopXY[1];
-                destination.troop['soldierRanged'].x = destination.rangedXY[0];
-                destination.troop['soldierRanged'].y = destination.rangedXY[1];
-                source.troop = [];
-                console.log("destination")
-                console.log(destination)
-                console.log("source")
-                console.log(source)
-            }
-            // Move only the troops that hasn't moved from allied region to region with no troops
-            else {
+            // Movement for the melee soldiers
+            if (destination.troop['soldier'] == null && source.troop['soldier'] != null
+                && source.troop['soldier'].hasMoved < source.troop['soldier'].count) {
                 if (source.owner == 0) {
                     destination.troop["soldier"] = new Soldier(gameEngine, destination.troopXY[0], destination.troopXY[1]);
                 } else {
                     destination.troop["soldier"] = new Alien(gameEngine, destination.troopXY[0], destination.troopXY[1]);
                 }
 
+                // Checking if moving all troops from source or not
+                if (source.troop['soldier'].hasMoved == 0) {
+                    destination.troop['soldier'].count = source.troop['soldier'].count;
+                    destination.troop['soldier'].hasMoved = source.troop['soldier'].count;
+                }
+                else {
+                    destination.troop['soldier'].count = source.troop['soldier'].count - source.troop['soldier'].hasMoved;
+                    destination.troop['soldier'].hasMoved = source.troop['soldier'].count - source.troop['soldier'].hasMoved;
+                    source.troop['soldier'].count = source.troop['soldier'].hasMoved;
+                }
+
                 gameEngine.addEntity(destination.troop["soldier"]);
-                destination.troop['soldier'].count = source.troop['soldier'].count - source.troop['soldier'].hasMoved;
-                destination.troop['soldier'].hasMoved = source.troop['soldier'].count - source.troop['soldier'].hasMoved;
-                source.troop['soldier'].count = source.troop['soldier'].hasMoved;
+            }
+
+
+            // Movement for the ranged soldiers
+            if (destination.troop['soldierRanged'] == null && source.troop['soldierRanged'] != null
+                && source.troop['soldierRanged'].hasMoved < source.troop['soldierRanged'].count) {
+
+                if (source.owner == 0) {
+                    destination.troop["soldierRanged"] = new SoldierRanged(gameEngine, destination.rangedXY[0], destination.rangedXY[1]);
+                } else {
+                    destination.troop["soldierRanged"] = new AlienRanged(gameEngine, destination.rangedXY[0], destination.rangedXY[1]);
+                }
+
+                // Checking if moving all troops from source or not
+                if (source.troop['soldierRanged'].hasMoved == 0) {
+                    destination.troop['soldierRanged'].count = source.troop['sosoldierRangeddier'].count;
+                    destination.troop['soldierRanged'].hasMoved = source.troop['soldierRanged'].count;
+                }
+                else {
+                    destination.troop['soldierRanged'].count = source.troop['soldierRanged'].count - source.troop['soldierRanged'].hasMoved;
+                    destination.troop['soldierRanged'].hasMoved = source.troop['soldierRanged'].count - source.troop['soldierRanged'].hasMoved;
+                    source.troop['soldierRanged'].count = source.troop['soldierRanged'].hasMoved;
+                }
+
+                gameEngine.addEntity(destination.troop["soldierRanged"]);
+
+            }
+
+        }
+        // Move to occupied region
+        else if ((destination.troop['soldier'] != null || destination.troop['soldierRanged'] != null) &&
+            ((source.troop['soldier'] != null && source.troop['soldier'].hasMoved < source.troop['soldier'].count)
+                || (source.troop['soldierRanged'] != null && source.troop['soldierRanged'].hasMoved < source.troop['soldierRanged'].count))) {
+
+
+            // Movement for the melee soldiers
+            if (destination.troop['soldier'] == null && source.troop['soldier'] != null
+                && source.troop['soldier'].hasMoved < source.troop['soldier'].count) {
+                if (source.owner == 0) {
+                    destination.troop["soldier"] = new Soldier(gameEngine, destination.troopXY[0], destination.troopXY[1]);
+                } else {
+                    destination.troop["soldier"] = new Alien(gameEngine, destination.troopXY[0], destination.troopXY[1]);
+                }
+
+                // Checking if moving all troops from source or not
+                if (source.troop['soldier'].hasMoved == 0) {
+                    destination.troop['soldier'].count = source.troop['soldier'].count;
+                    destination.troop['soldier'].hasMoved = source.troop['soldier'].count;
+                }
+                else {
+                    destination.troop['soldier'].count = source.troop['soldier'].count - source.troop['soldier'].hasMoved;
+                    destination.troop['soldier'].hasMoved = source.troop['soldier'].count - source.troop['soldier'].hasMoved;
+                    source.troop['soldier'].count = source.troop['soldier'].hasMoved;
+                }
+
+                gameEngine.addEntity(destination.troop["soldier"]);
+            }
+
+            // Movement for the ranged soldiers
+            if (destination.troop['soldierRanged'] == null && source.troop['soldierRanged'] != null
+                && source.troop['soldierRanged'].hasMoved < source.troop['soldierRanged'].count) {
+
+                if (source.owner == 0) {
+                    destination.troop["soldierRanged"] = new SoldierRanged(gameEngine, destination.rangedXY[0], destination.rangedXY[1]);
+                } else {
+                    destination.troop["soldierRanged"] = new AlienRanged(gameEngine, destination.rangedXY[0], destination.rangedXY[1]);
+                }
+
+                // Checking if moving all troops from source or not
+                if (source.troop['soldierRanged'].hasMoved == 0) {
+                    destination.troop['soldierRanged'].count = source.troop['sosoldierRangeddier'].count;
+                    destination.troop['soldierRanged'].hasMoved = source.troop['soldierRanged'].count;
+                }
+                else {
+                    destination.troop['soldierRanged'].count = source.troop['soldierRanged'].count - source.troop['soldierRanged'].hasMoved;
+                    destination.troop['soldierRanged'].hasMoved = source.troop['soldierRanged'].count - source.troop['soldierRanged'].hasMoved;
+                    source.troop['soldierRanged'].count = source.troop['soldierRanged'].hasMoved;
+                }
+
+                gameEngine.addEntity(destination.troop["soldierRanged"]);
+            }
+
+            if (destination.troop['soldier'] != null && source.troop['soldier'] != null
+                && source.troop['soldier'].hasMoved < source.troop['soldier'].count) {
+                if (source.troop['soldier'].hasMoved == 0) {
+                    destination.troop['soldier'].count += source.troop['soldier'].count;
+                    destination.troop['soldier'].hasMoved += source.troop['soldier'].count;
+                    source.troop['soldier'].removeFromWorld = true;
+                    source.troop['soldier'] = null;
+                }
+                else {
+                    destination.troop['soldier'].count += source.troop['soldier'].count - source.troop['soldier'].hasMoved;
+                    destination.troop['soldier'].hasMoved += source.troop['soldier'].count - source.troop['soldier'].hasMoved;
+                    source.troop['soldier'].count = source.troop['soldier'].hasMoved;
+                }
+            }
+
+            if (destination.troop['soldierRanged'] != null && source.troop['soldierRanged'] != null
+                && source.troop['soldierRanged'].hasMoved < source.troop['soldierRanged'].count) {
+                if (source.troop['soldierRanged'].hasMoved == 0) {
+                    destination.troop['soldierRanged'].count += source.troop['soldierRanged'].count;
+                    destination.troop['soldierRanged'].hasMoved += source.troop['soldierRanged'].count;
+                    source.troop['soldierRanged'].removeFromWorld = true;
+                    source.troop['soldierRanged'] = null;
+                }
+                else {
+                    destination.troop['soldierRanged'].count += source.troop['soldierRanged'].count - source.troop['soldierRanged'].hasMoved;
+                    destination.troop['soldierRanged'].hasMoved += source.troop['soldierRanged'].count - source.troop['soldierRanged'].hasMoved;
+                    source.troop['soldierRanged'].count = source.troop['soldierRanged'].hasMoved;
+                }
             }
 
 
         }
     }
-    // This is moving to an empty region
-    else if (validMove && validSource && destination.troop["soldier"] == null) {
-        destination.owner = source.owner;
-        destination.troop = source.troop;
-        destination.troop['soldier'].x = destination.troopXY[0];
-        destination.troop['soldier'].y = destination.troopXY[1];
-        destination.troop['soldier'].hasMoved = destination.troop['soldier'].count;
-        destination.troop['soldierRanged'].x = destination.troopXY[0];
-        destination.troop['soldierRanged'].y = destination.troopXY[1];
-        destination.troop['soldierRanged'].hasMoved = destination.troop['soldierRanged'].count;
-        source.troop = [];
-    } else if (validMove && validSource) {
+    // // This is moving to a neutral region
+    // else if (validMove && validSource && destination.troop["soldier"] == null) {
+    //     destination.owner = source.owner;
+    //     destination.troop = source.troop;
+    //     destination.troop['soldier'].x = destination.troopXY[0];
+    //     destination.troop['soldier'].y = destination.troopXY[1];
+    //     destination.troop['soldier'].hasMoved = destination.troop['soldier'].count;
+    //     destination.troop['soldierRanged'].x = destination.troopXY[0];
+    //     destination.troop['soldierRanged'].y = destination.troopXY[1];
+    //     destination.troop['soldierRanged'].hasMoved = destination.troop['soldierRanged'].count;
+    //     source.troop = [];
+    // } 
+    else if (validMove && validSource) {
         var atkPow = 0;
 
         atkPow += (source.troop['soldier'].count - source.troop['soldier'].hasMoved) * source.troop['soldier'].atk;
@@ -2370,6 +2449,7 @@ InputHandler.prototype = new Entity();
 InputHandler.prototype.constructor = InputHandler;
 
 InputHandler.prototype.update = function (ctx) {
+    // console.log(regionsList)
     // console.log("%c Current Region:", "background: #222; color: #bada55");
     // console.log(selectedRegion);
     // console.log("%c All Region:", "background: #222; color: #bada55");
@@ -2885,9 +2965,6 @@ WelcomeScreen.prototype.draw = function (ctx) {
 // ===================================================================
 
 
-
-
-
 // ===================================================================
 // Start - End Result Display Screen
 // ===================================================================
@@ -2904,7 +2981,6 @@ function EndResultDisplay(game) {
     
     // Hitboxes for the buttons
     this.hitBox = [{ name: "continue", x: 533, y: 449, w: 211, h: 49 }];
-
 
     GUIEntity.call(this, game, 0, 0);
 }
@@ -2926,6 +3002,7 @@ EndResultDisplay.prototype.update = function () {
     function displayBattle(numBattle){
 
     }
+
 }
 
 EndResultDisplay.prototype.draw = function (ctx) {
@@ -2941,6 +3018,7 @@ EndResultDisplay.prototype.draw = function (ctx) {
         ctx.drawImage(this.continueBtn, (gameEngine.surfaceWidth / 2) - (109), 450);
         
     }
+
 
     
 }
