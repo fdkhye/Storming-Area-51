@@ -1122,8 +1122,8 @@ function moveFight(source, destination) {
                 gameEngine.addEntity(destination.troop["soldierRanged"]);
 
                 if (tempAtkRange.count !== 0){
-                    destination.troop['soldierRanged'].count = (atkPow - atkPow % 2) / 2;
-                    destination.troop['soldierRanged'].hasMoved = destination.troop['soldierRanged'].count;
+                    if(destination.troop['soldierRanged']) destination.troop['soldierRanged'].count = (atkPow - atkPow % 2) / 2;
+                    if(destination.troop['soldierRanged']) destination.troop['soldierRanged'].hasMoved = destination.troop['soldierRanged'].count;
 
                     if (tempAtkSoldier.count !== 0){
                         if (atkPow % 2 === 1){
@@ -1148,9 +1148,10 @@ function moveFight(source, destination) {
         } else {
             if (source.troop['soldier'].hasMoved == 0) {
 
-                if (destination.troop['soldier'].count >= (defPow - defPow % 2) / 2 && destination.troop['soldier']) {
+                if (destination.troop['soldier'] && destination.troop['soldier'].count >= (defPow - defPow % 2) / 2 && destination.troop['soldier']) {
                     destination.troop['soldier'].count = (defPow - defPow % 2) / 2;
                 }               
+           
 
                 if (destination.troop['soldierRanged']){
                     if (defPow % 2 === 1 ){
@@ -3167,7 +3168,7 @@ EndResultDisplay.prototype.draw = function (ctx) {
     if(this.displayBattleText) {
         ctx.font = "24px Arial";
         if(this.numberOfBattles > 0) {
-            ctx.fillText("Number of Battles: " + this.numberOfBattles, (gameEngine.surfaceWidth / 2) - (110),
+            ctx.fillText("Number of Alien Activity: " + this.numberOfBattles, (gameEngine.surfaceWidth / 2) - (110),
             390)
         } else {
             ctx.fillText("No battles to report.", (gameEngine.surfaceWidth / 2) - (110),
